@@ -162,15 +162,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       _questions.length,
-                      (index) => Container(
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: 8,
+                        width: _currentPage == index ? 24 : 8,
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? const Color(0xFF131416)
+                              ? const Color(0xFF155DFC)
                               : const Color(0xFFD9D9D9),
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
@@ -231,18 +233,33 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
           // Question Label
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: const BoxDecoration(
-              color: Color(0xFFD9D9D9),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFE8E8E8),
+                  Color(0xFFD9D9D9),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Text(
               question.question,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Color(0xFFA0A0A5),
-                fontSize: 14.49,
+                color: Color(0xFF616161),
+                fontSize: 15,
                 fontFamily: 'Urbanist',
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 height: 1.60,
                 letterSpacing: 0.18,
               ),
@@ -351,17 +368,27 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                 width: 42,
                 height: 46,
                 decoration: ShapeDecoration(
-                  color: const Color(0xFF155DFC),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF1E6FFF),
+                      Color(0xFF155DFC),
+                    ],
+                  ),
                   shape: RoundedRectangleBorder(
-                    side: const BorderSide(
-                      width: 1,
-                      color: Color(0x7FC3C3C3),
-                    ),
                     borderRadius: BorderRadius.circular(16),
                   ),
+                  shadows: [
+                    BoxShadow(
+                      color: const Color(0xFF155DFC).withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: const Icon(
-                  Icons.arrow_forward,
+                  Icons.arrow_forward_rounded,
                   color: Colors.white,
                   size: 24,
                 ),
@@ -412,24 +439,51 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         // Continue button
         GestureDetector(
           onTap: _handleMultiSelectContinue,
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: ShapeDecoration(
-              color: const Color(0xFF155DFC),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF1E6FFF),
+                  Color(0xFF155DFC),
+                ],
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              shadows: [
+                BoxShadow(
+                  color: const Color(0xFF155DFC).withOpacity(0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Text(
-              _conditions.isEmpty ? 'Skip' : 'Continue (${_conditions.length} selected)',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'Urbanist',
-                fontWeight: FontWeight.w700,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _conditions.isEmpty ? 'Skip' : 'Continue (${_conditions.length} selected)',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'Urbanist',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
             ),
           ),
         ),
@@ -442,14 +496,47 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
     return GestureDetector(
       onTap: () => _toggleCondition(option),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
         decoration: ShapeDecoration(
-          color: isSelected ? const Color(0xFF155DFC) : const Color(0xFF2E2E2E),
+          gradient: isSelected
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF1E6FFF),
+                    Color(0xFF155DFC),
+                  ],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF3A3A3A),
+                    Color(0xFF2E2E2E),
+                  ],
+                ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(12),
           ),
+          shadows: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF155DFC).withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         child: Row(
           children: [
@@ -467,12 +554,16 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                 ),
               ),
             ),
-            if (isSelected)
-              const Icon(
+            AnimatedScale(
+              scale: isSelected ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.elasticOut,
+              child: const Icon(
                 Icons.check_circle,
                 color: Colors.white,
                 size: 24,
               ),
+            ),
           ],
         ),
       ),
@@ -480,30 +571,62 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   }
 
   Widget _buildOptionButton(String option) {
-    return GestureDetector(
-      onTap: () => _handleAnswer(option),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        decoration: ShapeDecoration(
-          color: const Color(0xFF2E2E2E),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(9),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 1.0, end: 1.0),
+      duration: const Duration(milliseconds: 200),
+      builder: (context, scale, child) {
+        return Transform.scale(
+          scale: scale,
+          child: GestureDetector(
+            onTapDown: (_) {
+              // Trigger scale down animation
+              setState(() {});
+            },
+            onTapUp: (_) {
+              _handleAnswer(option);
+            },
+            onTapCancel: () {
+              setState(() {});
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: ShapeDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF3A3A3A),
+                    Color(0xFF2E2E2E),
+                  ],
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                shadows: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                option,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontFamily: 'Urbanist',
+                  fontWeight: FontWeight.w700,
+                  height: 1.60,
+                  letterSpacing: 0.20,
+                ),
+              ),
+            ),
           ),
-        ),
-        child: Text(
-          option,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontFamily: 'Urbanist',
-            fontWeight: FontWeight.w700,
-            height: 1.60,
-            letterSpacing: 0.20,
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

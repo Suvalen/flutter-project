@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import '../services/api_service.dart';  // ← ADD THIS IMPORT
+
 
 class YourLoginWidget extends StatefulWidget {
   const YourLoginWidget({super.key});
@@ -15,13 +17,16 @@ class _YourLoginWidgetState extends State<YourLoginWidget> {
   late FocusNode _emailFocus;
   late FocusNode _passwordFocus;
   bool _rememberMe = false;
+  
+  // ⭐ ADD THESE FOR TEST
+  bool _isTesting = false;
+  String _testResult = '';
 
   @override
   void initState() {
     super.initState();
     _emailFocus = FocusNode();
     _passwordFocus = FocusNode();
-    // Debug listeners to verify focus changes
     _emailFocus.addListener(() {
       debugPrint('emailFocus.hasFocus = ${_emailFocus.hasFocus}');
     });
@@ -41,11 +46,46 @@ class _YourLoginWidgetState extends State<YourLoginWidget> {
 
   void _login() {
     if (_formKey.currentState!.validate()) {
-      // Navigate to welcome home screen with "Get Started" button
       Navigator.of(context).pushNamedAndRemoveUntil(
         '/welcome-home',
         (route) => false,
       );
+    }
+  }
+
+  // ⭐ ADD THIS TEST FUNCTION
+  Future<void> _testBackendConnection() async {
+    setState(() {
+      _isTesting = true;
+      _testResult = 'Testing connection...';
+    });
+
+    try {
+      // Test 1: Check if server is reachable
+      bool connected = await ApiService.testConnection();
+      
+      if (connected) {
+        // Test 2: Try sending a message
+        String response = await ApiService.sendMessage("What is diabetes?");
+        
+        setState(() {
+          _isTesting = false;
+          _testResult = '✅ Connected!\n\nBot response:\n$response';
+        });
+        
+        debugPrint('✅ Backend connected! Response: $response');
+      } else {
+        setState(() {
+          _isTesting = false;
+          _testResult = '❌ Cannot connect to server.\n\nCheck:\n1. Is Flask running?\n2. Is IP address correct in api_service.dart?';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isTesting = false;
+        _testResult = '❌ Error: $e';
+      });
+      debugPrint('❌ Connection error: $e');
     }
   }
 
@@ -84,7 +124,7 @@ class _YourLoginWidgetState extends State<YourLoginWidget> {
                       onTap: () => debugPrint('Email field tapped'),
                       keyboardType: TextInputType.emailAddress,
                       enableInteractiveSelection: true,
-                      autofocus: true, // useful to test focus/cursor on startup
+                      autofocus: true,
                       textInputAction: TextInputAction.next,
                       onFieldSubmitted: (_) {
                         FocusScope.of(context).requestFocus(_passwordFocus);
@@ -310,6 +350,92 @@ class _YourLoginWidgetState extends State<YourLoginWidget> {
                   ),
                 ),
               ),
+              
+              // ⭐⭐⭐ TEST BUTTON - DELETE THIS SECTION LATER ⭐⭐⭐
+              const SizedBox(height: 40),
+              const Divider(color: Colors.orange, thickness: 2),
+              const SizedBox(height: 16),
+              
+              Center(
+                child: Text(
+                  '🧪 DEBUG: Test Backend Connection',
+                  style: TextStyle(
+                    color: Colors.orange[700],
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: _isTesting ? null : _testBackendConnection,
+                  icon: _isTesting 
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.wifi_find, color: Colors.white),
+                  label: Text(
+                    _isTesting ? 'Testing...' : 'Test Flask Backend',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Test Result Display
+              if (_testResult.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: _testResult.contains('✅') 
+                        ? Colors.green[50] 
+                        : Colors.red[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _testResult.contains('✅') 
+                          ? Colors.green 
+                          : Colors.red,
+                    ),
+                  ),
+                  child: Text(
+                    _testResult,
+                    style: TextStyle(
+                      color: _testResult.contains('✅') 
+                          ? Colors.green[800] 
+                          : Colors.red[800],
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 16),
+              const Divider(color: Colors.orange, thickness: 2),
+              // ⭐⭐⭐ END TEST BUTTON SECTION ⭐⭐⭐
+              
             ],
           ),
         ),
@@ -355,5 +481,3 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
-
-// IMPROVED: Fixed text input issue by removing GestureDetector and enabling interactive selection

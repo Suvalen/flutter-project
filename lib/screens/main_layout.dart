@@ -3,6 +3,7 @@ import '../widgets/custom_bottom_nav.dart';
 import 'chat_screen.dart';
 import 'search_content.dart';
 import 'profile_content.dart';
+import '../services/api_service.dart';
 
 // Main layout with bottom navigation
 // Manages which content to display based on selected tab
@@ -39,6 +40,7 @@ class _MainLayoutState extends State<MainLayout> {
           children: _pages,
         ),
       ),
+      
       bottomNavigationBar: CustomBottomNav(
         currentIndex: _selectedIndex,
         onTap: _onNavTap,
@@ -46,3 +48,4 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 }
+

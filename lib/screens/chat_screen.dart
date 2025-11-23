@@ -1,4 +1,19 @@
 import 'package:flutter/material.dart';
+import '../widgets/settings_icon_button.dart';
+import '../services/api_service.dart';
+
+// Message model
+class ChatMessage {
+  final String text;
+  final bool isUser;
+  final DateTime timestamp;
+
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+}
 
 // Main chat interface screen
 // Shows AI capability cards and message input field
@@ -11,6 +26,9 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final List<ChatMessage> _messages = [];
+
   final List<String> _capabilities = [
     'Remembers what user said earlier in the conversation',
     'Allows user to provide follow-up Questions and correctoions',
@@ -22,150 +40,367 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isNotEmpty) {
-      // TODO: Implement message sending logic
-      print('Sending message: ${_messageController.text}');
-      _messageController.clear();
-    }
+bool _isLoading = false;  // ← ADD THIS above the _sendMessage function
+void _sendMessage() async {
+  if (_messageController.text.trim().isEmpty || _isLoading) return;
+  
+  String userMessage = _messageController.text.trim();
+  _messageController.clear();
+  
+  // Add user message
+  setState(() {
+    _messages.add(ChatMessage(
+      text: userMessage,
+      isUser: true,
+    ));
+    _isLoading = true;
+  });
+  _scrollToBottom();
+  
+  // Call Flask API
+  try {
+    String response = await ApiService.sendMessage(userMessage);
+    
+    setState(() {
+      _messages.add(ChatMessage(
+        text: response,
+        isUser: false,
+      ));
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      _messages.add(ChatMessage(
+        text: 'Sorry, I could not connect to the server. Please try again.',
+        isUser: false,
+      ));
+      _isLoading = false;
+    });
+  }
+  
+  _scrollToBottom();
+}
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        // Header with logo
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            children: [
+        Column(
+          children: [
+            // Header with logo (only show when no messages)
+            if (_messages.isEmpty)
               Container(
-                width: 120,
-                height: 120,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/FullLogo_Transparent.png'),
-                    fit: BoxFit.contain,
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/FullLogo_Transparent.png'),
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Medi-Bot',
+                      style: TextStyle(
+                        color: Color(0xFF131416),
+                        fontSize: 24,
+                        fontFamily: 'Urbanist',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+        // Message list or capability cards
+        Expanded(
+          child: _messages.isEmpty
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      // Diagnosis Mode Button
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pushNamed('/diagnosis');
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF155DFC),
+                                Color(0xFF1E6FFF),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF155DFC).withOpacity(0.4),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.health_and_safety_rounded,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Start Diagnosis',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontFamily: 'Urbanist',
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Get AI-powered health assessment',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 13,
+                                        fontFamily: 'Urbanist',
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      const Text(
+                        'Capabilities',
+                        style: TextStyle(
+                          color: Color(0xFF616161),
+                          fontSize: 16,
+                          fontFamily: 'Urbanist',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._capabilities.map((capability) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildCapabilityCard(capability),
+                          )),
+                      const SizedBox(height: 20),
+                    ],
                   ),
+                )
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    return _buildMessageBubble(_messages[index]);
+                  },
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Medi-Bot',
-                style: TextStyle(
-                  color: Color(0xFF131416),
-                  fontSize: 24,
-                  fontFamily: 'Urbanist',
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
         ),
 
-        // Capability cards in scrollable area
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                const Text(
-                  'Capabilities',
-                  style: TextStyle(
-                    color: Color(0xFF616161),
-                    fontSize: 16,
-                    fontFamily: 'Urbanist',
-                    fontWeight: FontWeight.w600,
+            // Message input field at bottom
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: const Border(
+                  top: BorderSide(
+                    color: Color(0xFFE1E1E1),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(height: 16),
-                ..._capabilities.map((capability) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildCapabilityCard(capability),
-                    )),
-                const SizedBox(height: 20),
-              ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      decoration: ShapeDecoration(
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(7),
+                          side: const BorderSide(
+                            color: Color(0xFFE1E1E1),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        style: const TextStyle(
+                          color: Color(0xFF323142),
+                          fontSize: 16,
+                          fontFamily: 'Urbanist',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Send a message.',
+                          hintStyle: TextStyle(
+                            color: Color(0xFFA3A3A8),
+                            fontSize: 16,
+                            fontFamily: 'Urbanist',
+                            fontWeight: FontWeight.w400,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onSubmitted: (_) => _sendMessage(),
+                        maxLines: null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+  onTap: _isLoading ? null : _sendMessage,
+  child: Container(
+    width: 40,
+    height: 40,
+    decoration: ShapeDecoration(
+      color: _isLoading ? Colors.grey : const Color(0xFF155DFC),
+      shape: const CircleBorder(),
+    ),
+    child: _isLoading
+        ? const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2,
+            ),
+          )
+        : const Icon(
+            Icons.send_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+  ),
+),
+                ],
+              ),
+            ),
+          ],
+        ),
+        // Settings icon button
+        const SettingsIconButton(),
+      ],
+    );
+  }
+
+  Widget _buildMessageBubble(ChatMessage message) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Bot avatar on left
+          if (!message.isUser) ...[
+            Container(
+              width: 37,
+              height: 37,
+              decoration: const ShapeDecoration(
+                color: Color(0xFF141718),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(5),
+                    topRight: Radius.circular(5),
+                    bottomLeft: Radius.circular(5),
+                    bottomRight: Radius.circular(5),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Message bubble
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: ShapeDecoration(
+                color: message.isUser
+                    ? const Color(0xFF155DFC)  // Blue for user messages
+                    : const Color(0xFFF7F7F8), // Gray for bot messages
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(12),
+                    topRight: const Radius.circular(12),
+                    bottomLeft: message.isUser ? const Radius.circular(12) : const Radius.circular(2),
+                    bottomRight: message.isUser ? const Radius.circular(2) : const Radius.circular(12),
+                  ),
+                ),
+              ),
+              child: Text(
+                message.text,
+                style: TextStyle(
+                  color: message.isUser ? Colors.white : const Color(0xFF2E2E2E),
+                  fontSize: 14,
+                  fontFamily: 'Urbanist',
+                  fontWeight: FontWeight.w400,
+                  height: 1.4,
+                ),
+              ),
             ),
           ),
-        ),
-
-        // Message input field at bottom
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF7F8FA),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      side: const BorderSide(
-                        color: Color(0xFFE0E0E0),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _messageController,
-                    style: const TextStyle(
-                      color: Color(0xFF323142),
-                      fontSize: 15,
-                      fontFamily: 'Urbanist',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    decoration: const InputDecoration(
-                      hintText: 'Send a message.',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF9E9E9E),
-                        fontSize: 15,
-                        fontFamily: 'Urbanist',
-                        fontWeight: FontWeight.w400,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    onSubmitted: (_) => _sendMessage(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: _sendMessage,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const ShapeDecoration(
-                    color: Color(0xFF155DFC),
-                    shape: CircleBorder(),
-                  ),
-                  child: const Icon(
-                    Icons.send_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+          // Spacing on the opposite side to prevent full width
+          if (message.isUser)
+            const SizedBox(width: 50)
+          else
+            const SizedBox(width: 50),
+        ],
+      ),
     );
   }
 

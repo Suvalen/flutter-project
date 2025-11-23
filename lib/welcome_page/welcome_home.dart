@@ -51,8 +51,11 @@ class HomeContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 26),
           child: GestureDetector(
             onTap: () {
-              // Navigate to questionnaire
-              Navigator.of(context).pushNamed('/questionnaire');
+              // Navigate directly to chat screen
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/home',
+                (route) => false,
+              );
             },
             child: Container(
               width: double.infinity,
@@ -99,3 +102,4 @@ class HomeContent extends StatelessWidget {
 // IMPROVED: Refactored from MediBotLandingScreen to HomeContent - content-only widget (no Scaffold, no footer) for use in MainLayout with Main Scaffold Pattern
 // Original Figma design (node 92-1269) maintained - responsive layout, Medi-Bot image, welcome text, Get Started button
 // Bottom nav now managed centrally in MainLayout via CustomBottomNav widget
+// IMPROVED: Get Started button now navigates directly to chat screen ('/home'), skipping the questionnaire - diagnosis mode is now available via the diagnosis button in chat

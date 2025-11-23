@@ -4,6 +4,8 @@ import 'welcome_page/welcome_page.dart';
 import 'screens/main_layout.dart';
 import 'screens/welcome_home_screen.dart';
 import 'screens/questionnaire_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/diagnosis_mode_screen.dart';
 import 'reg/login.dart';
 import 'reg/register.dart';
 
@@ -30,9 +32,11 @@ class MyApp extends StatelessWidget {
             const LoginScreen(), // Welcome page with login/register buttons
         '/loginform': (_) => const LoginForm(), // Login form
         '/register': (_) => const RegisterScreen(), // Register form
-        '/welcome-home': (_) => const WelcomeHomeScreen(), // Welcome home with "Get Started" button
-        '/questionnaire': (_) => const QuestionnaireScreen(), // Pre-chat questionnaire
+        '/welcome-home': (_) => const WelcomeHomeScreen(), // Welcome home with "Get Started" button that goes to chat
+        '/questionnaire': (_) => const QuestionnaireScreen(), // Legacy questionnaire (not used in main flow)
         '/home': (_) => const MainLayout(), // Main app with chat screen
+        '/settings': (_) => const SettingsScreen(), // Settings/Profile page
+        '/diagnosis': (_) => const DiagnosisModeScreen(), // Diagnosis mode - Ada Health style symptom checker
         '/splash': (_) => const SplashScreen(),
       },
     );
@@ -107,3 +111,4 @@ class RegisterScreen extends StatelessWidget {
 
 // IMPROVED: Replaced static Figma UI in LoginForm and RegisterScreen with functional widgets (YourLoginWidget and SignUpWidget from reg/ folder)
 // IMPROVED: Refactored to use Main Scaffold Pattern - MainLayout manages bottom navigation with reusable CustomBottomNav widget, content pages are separated (HomeContent, SearchContent, ProfileContent), single source of truth for navigation state
+// IMPROVED: Streamlined login flow - now goes: Splash → Login → Welcome Home → Chat Screen (diagnosis mode accessible via button in chat, skipping the old questionnaire page)

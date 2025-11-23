@@ -79,18 +79,20 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 28.83,
-        height: 28.83,
+        width: 40,
+        height: 40,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(
               icon,
               color: isActive ? const Color(0xFF131416) : const Color(0xFF616161),
-              size: 20,
+              size: 28,
             ),
-            // Active indicator dot
-            Container(
+            // Animated indicator dot with smooth fade and scale
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
               width: 7.21,
               height: 7.21,
               decoration: BoxDecoration(
